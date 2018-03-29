@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IsServiceFabricServiceProject>True</IsServiceFabricServiceProject>
+    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ServiceFabric" Version="6.1.472" />
+    <PackageReference Include="Microsoft.ServiceFabric.Data" Version="3.0.472" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services" Version="3.0.472" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ServiceFabric.Services.Grpc\ServiceFabric.Services.Grpc.csproj" />
+    <ProjectReference Include="..\Greeter\Greeter.csproj" />
+  </ItemGroup>
+
+</Project>
