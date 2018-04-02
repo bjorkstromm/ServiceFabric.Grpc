@@ -39,7 +39,7 @@ namespace StatelessGrpcService
             return new[]
             {
                 new ServiceInstanceListener(serviceContext => 
-                    new GrpcCommunicationListener(new[] { Greeter.BindService(new GreeterService()) }, serviceContext, "ServiceEndpoint"))
+                    new GrpcCommunicationListener(new[] { Greeter.BindService(new GreeterService()) }, serviceContext))
             };
         }
     }

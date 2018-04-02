@@ -10,10 +10,20 @@ namespace ServiceFabric.Services.Grpc.Communication.Grpc.Runtime
 {
     public class GrpcCommunicationListener : ICommunicationListener
     {
+        private const string ServiceEndpointName = "ServiceEndpoint";
+
         private readonly IEnumerable<ServerServiceDefinition> _services;
         private readonly ServiceContext _serviceContext;
-        private readonly string _endpointName;
+        private readonly ServerPort _serverPort;
+
         private Server _server;
+
+        public GrpcCommunicationListener(
+          IEnumerable<ServerServiceDefinition> services,
+          ServiceContext serviceContext)
+            : this(services, serviceContext, ServiceEndpointName)
+        {
+        }
 
         public GrpcCommunicationListener(
           IEnumerable<ServerServiceDefinition> services,
@@ -22,7 +32,7 @@ namespace ServiceFabric.Services.Grpc.Communication.Grpc.Runtime
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _serviceContext = serviceContext ?? throw new ArgumentNullException(nameof(serviceContext));
-            _endpointName = endpointName ?? throw new ArgumentNullException(nameof(endpointName));
+            _serverPort = GetServerPort(endpointName);
         }
 
         public void Abort()
@@ -37,15 +47,11 @@ namespace ServiceFabric.Services.Grpc.Communication.Grpc.Runtime
 
         public async Task<string> OpenAsync(CancellationToken cancellationToken)
         {
-            var serviceEndpoint = _serviceContext.CodePackageActivationContext.GetEndpoint(_endpointName);
-            var port = serviceEndpoint.Port;
-            var host = FabricRuntime.GetNodeContext().IPAddressOrFQDN;
-
             try
             {
                 _server = new Server
                 {
-                    Ports = { new ServerPort(host, port, ServerCredentials.Insecure) }
+                    Ports = { _serverPort }
                 };
                 foreach (var service in _services)
                 {
@@ -54,7 +60,7 @@ namespace ServiceFabric.Services.Grpc.Communication.Grpc.Runtime
 
                 _server.Start();
 
-                return $"http://{host}:{port}";
+                return $"http://{_serverPort.Host}:{_serverPort.Port}";
             }
             catch (Exception)
             {
@@ -73,6 +79,20 @@ namespace ServiceFabric.Services.Grpc.Communication.Grpc.Runtime
             {
                 // no-op
             }
+        }
+
+        private ServerPort GetServerPort(string endpointName)
+        {
+            if (string.IsNullOrEmpty(endpointName))
+            {
+                throw new ArgumentNullException(nameof(endpointName));
+            }
+
+            var serviceEndpoint = _serviceContext.CodePackageActivationContext.GetEndpoint(endpointName);
+            var port = serviceEndpoint.Port;
+            var host = _serviceContext.NodeContext.IPAddressOrFQDN;
+
+            return new ServerPort(host, port, ServerCredentials.Insecure);
         }
     }
 }
